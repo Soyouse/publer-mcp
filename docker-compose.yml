@@ -1,0 +1,21 @@
+# publer-mcp — service conteneurisé (isolation deps/malware vs hôte ; parité discord-mcp).
+# ⚠️ Port publié UNIQUEMENT sur l'IP Tailscale (tailnet only) — JAMAIS 0.0.0.0 côté hôte.
+#    Le bind interne 0.0.0.0 est sûr car la frontière réelle = ce mapping (pas l'interface publique).
+# ⚠️ Secrets montés read-only, JAMAIS dans l'image. service.env porte token/port/allowed-hosts (chmod 600).
+services:
+  publer-mcp:
+    build: .
+    image: publer-mcp:latest
+    container_name: publer-mcp
+    restart: unless-stopped
+    env_file:
+      - ./service.env
+    environment:
+      # Override pour le conteneur : bind interne 0.0.0.0 autorisé via le flag conteneur.
+      PUBLER_MCP_CONTAINER: "1"
+      PUBLER_MCP_HTTP_HOST: "0.0.0.0"
+    volumes:
+      - ./.secrets.json:/app/.secrets.json:ro
+    ports:
+      # hôte (IP Tailscale) -> conteneur. tailscale serve :8450 pointe sur 100.64.0.1:8789.
+      - "100.64.0.1:8789:8789"
