@@ -1,21 +1,23 @@
 # publer-mcp — service conteneurisé (isolation deps/malware vs hôte ; parité discord-mcp).
-# ⚠️ Port publié UNIQUEMENT sur l'IP Tailscale (tailnet only) — JAMAIS 0.0.0.0 côté hôte.
-#    Le bind interne 0.0.0.0 est sûr car la frontière réelle = ce mapping (pas l'interface publique).
-# ⚠️ Secrets montés read-only, JAMAIS dans l'image. service.env porte token/port/allowed-hosts (chmod 600).
+# ⚠️ network_mode host : le bridge Docker par défaut de CE VPS n'a PAS d'egress (mesuré : fetch échoue
+#    sur bridge, 200 en --network host). Le runtime DOIT joindre app.publer.com → réseau hôte.
+#    Isolation FS/deps/process PRÉSERVÉE (une dép compromise reste dans le conteneur) ; seul le net est partagé.
+# ⚠️ Avec network_mode host : pas de mapping `ports`, l'app bind directement PUBLER_MCP_HTTP_HOST:PORT
+#    sur l'hôte = 100.64.0.1:8789 (IP Tailscale, tailnet only — JAMAIS 0.0.0.0). serve :8450 pointe dessus.
+# ⚠️ build.network host : npm ci a besoin du réseau (même raison que le runtime).
+# ⚠️ Secrets montés read-only, JAMAIS dans l'image. service.env (chmod 600) = token/port/allowed-hosts.
 services:
   publer-mcp:
-    build: .
+    build:
+      context: .
+      network: host
     image: publer-mcp:latest
     container_name: publer-mcp
     restart: unless-stopped
+    network_mode: host
     env_file:
       - ./service.env
     environment:
-      # Override pour le conteneur : bind interne 0.0.0.0 autorisé via le flag conteneur.
-      PUBLER_MCP_CONTAINER: "1"
-      PUBLER_MCP_HTTP_HOST: "0.0.0.0"
+      PUBLER_MCP_HTTP_HOST: "100.64.0.1"
     volumes:
       - ./.secrets.json:/app/.secrets.json:ro
-    ports:
-      # hôte (IP Tailscale) -> conteneur. tailscale serve :8450 pointe sur 100.64.0.1:8789.
-      - "100.64.0.1:8789:8789"
