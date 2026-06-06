@@ -1,0 +1,13 @@
+# ⚠️ node_modules JAMAIS copié (réinstallé proprement dans l'image via npm ci).
+node_modules/
+# ⚠️ secrets JAMAIS dans l'image (montés en volume read-only à l'exécution).
+.secrets.json
+service.env
+# Bruit / dev-only.
+.git/
+reports/
+.stryker-tmp/
+tests/
+*.tar.gz
+*.log
+.DS_Store
