@@ -28,29 +28,29 @@ describe("rate-monitor", () => {
     expect(snapshot(now).perWorkspace).toEqual({ "(défaut)": 1 });
   });
 
-  it("purge les events hors fenêtre (60s)", () => {
+  it("purge les events hors fenêtre (2 min)", () => {
     recordResult("ws1", 401, () => 0);
-    // 61s plus tard : l'event de t=0 est hors fenêtre
-    expect(snapshot(() => 61_000).invalidTotal).toBe(0);
+    // 121s plus tard : l'event de t=0 est hors de la fenêtre de 120s
+    expect(snapshot(() => 121_000).invalidTotal).toBe(0);
   });
 
-  it("warn=true au-delà de 40% du débit nominal (≥20/min)", () => {
+  it("warn=true au-delà de 40% du débit nominal (≥40/2min)", () => {
     const now = () => 1000;
-    for (let i = 0; i < 19; i++) recordResult("ws1", 429, now);
+    for (let i = 0; i < 39; i++) recordResult("ws1", 429, now);
     expect(snapshot(now).warn).toBe(false);
     recordResult("ws1", 429, now);
     expect(snapshot(now).warn).toBe(true);
   });
 
-  it("snapshot expose la fenêtre (1 min) et le débit nominal (50)", () => {
+  it("snapshot expose la fenêtre (2 min) et le débit nominal (100)", () => {
     const snap = snapshot(() => 0);
-    expect(snap.windowMinutes).toBe(1);
-    expect(snap.softLimit).toBe(50);
+    expect(snap.windowMinutes).toBe(2);
+    expect(snap.softLimit).toBe(100);
   });
 
   it("ne purge PAS un event encore dans la fenêtre", () => {
     recordResult("ws1", 401, () => 1000);
-    // 30s après : toujours dans la fenêtre de 60s → conservé
-    expect(snapshot(() => 31_000).invalidTotal).toBe(1);
+    // 60s après : toujours dans la fenêtre de 120s → conservé
+    expect(snapshot(() => 61_000).invalidTotal).toBe(1);
   });
 });
