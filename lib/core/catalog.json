@@ -1,0 +1,25 @@
+{
+  "_note": "Catalogue de DÉPART. /users/me prouvé live. Les autres = à vérifier/compléter depuis https://publer.com/docs en P1. publer_call reste un passe-plat 100% (n'importe quel endpoint, catalogue ou non).",
+  "users": [
+    { "method": "GET", "path": "/users/me", "desc": "Compte courant + workspace actif (prouvé live)" }
+  ],
+  "workspaces": [
+    { "method": "GET", "path": "/workspaces", "desc": "Liste des workspaces du compte" }
+  ],
+  "accounts": [
+    { "method": "GET", "path": "/accounts", "desc": "Comptes sociaux connectés au workspace actif" }
+  ],
+  "posts": [
+    { "method": "GET", "path": "/posts", "desc": "Liste/recherche de posts du workspace" },
+    { "method": "GET", "path": "/posts/{id}", "desc": "Détail d'un post" },
+    { "method": "POST", "path": "/posts/schedule", "desc": "Planifier un/des post(s) (asynchrone → job_id)" },
+    { "method": "POST", "path": "/posts/schedule/publish", "desc": "Publier immédiatement (asynchrone → job_id)" },
+    { "method": "GET", "path": "/job_status/{id}", "desc": "Statut d'un job asynchrone (schedule/publish)" }
+  ],
+  "media": [
+    { "method": "POST", "path": "/media", "desc": "Uploader un média (image/vidéo) dans la bibliothèque" }
+  ],
+  "analytics": [
+    { "method": "GET", "path": "/analytics", "desc": "Insights/analytics (plan Business requis)" }
+  ]
+}

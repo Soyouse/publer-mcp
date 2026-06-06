@@ -1,0 +1,6 @@
+node_modules/
+.secrets.json
+reports/
+.stryker-tmp/
+*.log
+.DS_Store
