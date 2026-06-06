@@ -1,25 +1,84 @@
 {
-  "_note": "Catalogue de DÉPART. /users/me prouvé live. Les autres = à vérifier/compléter depuis https://publer.com/docs en P1. publer_call reste un passe-plat 100% (n'importe quel endpoint, catalogue ou non).",
+  "_note": "Catalogue auto-enseignant. Source = docs Publer (publer.com/docs) + appels prouvés live. Auth gérée par le MCP (Bearer-API + Publer-Workspace-Id). publer_call = passe-plat 100% : tout endpoint marche, catalogue ou non. Rate-limit Publer = 100 req/2min/compte (throttle interne). Publication = ASYNC : schedule -> job_id -> poll /job_status/{id}.",
   "users": [
-    { "method": "GET", "path": "/users/me", "desc": "Compte courant + workspace actif (prouvé live)" }
+    { "method": "GET", "path": "/users/me", "desc": "Compte courant (email, plan, subscription, workspace actif). Prouvé live." }
   ],
   "workspaces": [
-    { "method": "GET", "path": "/workspaces", "desc": "Liste des workspaces du compte" }
+    { "method": "GET", "path": "/workspaces", "desc": "Liste des workspaces du compte (1 par client en usage agence)." }
   ],
   "accounts": [
-    { "method": "GET", "path": "/accounts", "desc": "Comptes sociaux connectés au workspace actif" }
+    {
+      "method": "GET",
+      "path": "/accounts",
+      "desc": "Comptes sociaux connectés au workspace actif. Le champ `id` de chaque compte sert dans accounts[].id des posts. Prouvé live (page FB WebZenon).",
+      "returns": "[{ id, provider (facebook|instagram|linkedin|...), name, type (fb_page|...), social_id }]"
+    }
   ],
   "posts": [
-    { "method": "GET", "path": "/posts", "desc": "Liste/recherche de posts du workspace" },
-    { "method": "GET", "path": "/posts/{id}", "desc": "Détail d'un post" },
-    { "method": "POST", "path": "/posts/schedule", "desc": "Planifier un/des post(s) (asynchrone → job_id)" },
-    { "method": "POST", "path": "/posts/schedule/publish", "desc": "Publier immédiatement (asynchrone → job_id)" },
-    { "method": "GET", "path": "/job_status/{id}", "desc": "Statut d'un job asynchrone (schedule/publish)" }
+    {
+      "method": "GET",
+      "path": "/posts",
+      "desc": "Liste/recherche de posts du workspace.",
+      "query": {
+        "state": "string opt — filtre 1 état (ex: scheduled, published, draft, failed)",
+        "state[]": "array opt — plusieurs états",
+        "from": "ISO date — requis si `to` fourni",
+        "to": "ISO date — requis si `from` fourni",
+        "page": "int opt — pagination",
+        "account_ids[]": "array opt — filtre par comptes",
+        "query": "string opt — recherche plein-texte dans le contenu",
+        "postType": "string opt — filtre par type",
+        "member_id": "string opt — filtre par membre du workspace"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/posts/schedule",
+      "desc": "Planifie / met en file / recycle un ou plusieurs posts (jusqu'à 500). ASYNC → renvoie { job_id }. Poller /job_status/{job_id}.",
+      "params": {
+        "bulk.state": "'scheduled' (timing manuel via scheduled_at) | 'auto' (suit le calendrier du compte) | 'recycle' (republication cyclique)",
+        "bulk.posts[]": "tableau de posts (max 500)",
+        "bulk.posts[].networks": "objet par réseau : { facebook|instagram|twitter|linkedin|mastodon|... : { type, text, ... } }",
+        "networks.<provider>.type": "'status' | 'photo' | 'video' | 'link' | 'carousel' | 'pdf'",
+        "networks.<provider>.text": "string — contenu du post pour ce réseau",
+        "bulk.posts[].accounts[]": "tableau cible : [{ id (requis, = accounts.id), scheduled_at (ISO opt, override) }]"
+      },
+      "example": {
+        "bulk": {
+          "state": "scheduled",
+          "posts": [
+            {
+              "networks": { "facebook": { "type": "status", "text": "Bonjour depuis WebZenon 🚀" } },
+              "accounts": [{ "id": "<account_id>", "scheduled_at": "2026-06-07T10:00:00Z" }]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/posts/schedule/publish",
+      "desc": "Publie IMMÉDIATEMENT. Même corps que /posts/schedule (bulk.posts[].networks/accounts), state ignoré (publication directe). ASYNC → { job_id }.",
+      "example": {
+        "bulk": {
+          "posts": [
+            {
+              "networks": { "facebook": { "type": "status", "text": "Post publié maintenant" } },
+              "accounts": [{ "id": "<account_id>" }]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/job_status/{job_id}",
+      "desc": "Statut d'un job async (schedule/publish). status = 'working' | 'completed' | 'failed'. `payload` = résultats ou erreurs par post.",
+      "returns": "{ status, payload }"
+    }
   ],
-  "media": [
-    { "method": "POST", "path": "/media", "desc": "Uploader un média (image/vidéo) dans la bibliothèque" }
-  ],
-  "analytics": [
-    { "method": "GET", "path": "/analytics", "desc": "Insights/analytics (plan Business requis)" }
-  ]
+  "_todo": {
+    "media": "POST /media (upload image/vidéo) — compléter depuis publer.com/docs/posting/create-posts/media-handling avant 1er post média.",
+    "analytics": "GET analytics (charts/insights/hashtag/competitor, plan Business) — chemins exacts à confirmer depuis la doc analytics avant usage."
+  }
 }

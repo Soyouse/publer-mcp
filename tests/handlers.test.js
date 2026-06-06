@@ -40,6 +40,16 @@ describe("publer_discover", () => {
     const out = await discover.handle({ category: "zzz" });
     expect(out).toMatch(/Catégorie inconnue/);
   });
+
+  it("AUTO-ENSEIGNANT : tout endpoint d'écriture (POST/PUT/PATCH) du catalogue a params OU example", async () => {
+    // contrat : un agent doit pouvoir se servir seul → les écritures portent leur recette.
+    const cat = JSON.parse(await discover.handle({ category: "posts" }));
+    const writes = cat.posts.filter((e) => ["POST", "PUT", "PATCH"].includes(e.method));
+    expect(writes.length).toBeGreaterThan(0);
+    for (const e of writes) {
+      expect(Boolean(e.params) || Boolean(e.example)).toBe(true);
+    }
+  });
 });
 
 describe("publer_health", () => {
