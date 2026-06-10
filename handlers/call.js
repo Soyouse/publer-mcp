@@ -18,7 +18,18 @@ export const tool = {
     properties: {
       method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
       endpoint: { type: "string", description: "Chemin API, ex: /posts ou /users/me" },
-      payload: { type: "object", description: "Corps JSON optionnel (POST/PATCH/PUT)" },
+      payload: { type: "object", description: "Corps JSON optionnel (POST/PATCH/PUT). Si `file` est fourni, devient les champs de formulaire." },
+      file: {
+        type: "object",
+        description:
+          "Upload binaire multipart (ex: POST /media). Fournir → requête multipart/form-data (champ `file`) au lieu de JSON.",
+        properties: {
+          name: { type: "string", description: "Nom de fichier (ex: carte.png)" },
+          data: { type: "string", description: "Contenu encodé en base64" },
+          type: { type: "string", description: "MIME, ex: image/png" },
+        },
+        required: ["data"],
+      },
       workspace: {
         type: "string",
         description:
@@ -29,11 +40,11 @@ export const tool = {
   },
   // Stryker restore all
   async handle(args, ctx) {
-    const { method, endpoint, payload, workspace } = args;
+    const { method, endpoint, payload, workspace, file } = args;
     // Précédence : `workspace` explicite de l'appel > workspace de session > défaut secrets.
     const effectiveWorkspace = workspace ?? ctx.session?.workspace ?? undefined;
     try {
-      const res = await publerCall(method, endpoint, payload, { workspace: effectiveWorkspace });
+      const res = await publerCall(method, endpoint, payload, { workspace: effectiveWorkspace, file });
       return JSON.stringify(res ?? { ok: true }, null, 2);
     } catch (e) {
       ctx.incidents.add("error", `${method} ${endpoint} → ${e.message}`, {
