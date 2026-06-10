@@ -76,6 +76,13 @@
       "path": "/job_status/{job_id}",
       "desc": "Statut d'un job async (schedule/publish). status = 'working' | 'completed' | 'failed'. `payload` = résultats ou erreurs par post.",
       "returns": "{ status, payload }"
+    },
+    {
+      "method": "DELETE",
+      "path": "/posts",
+      "desc": "Supprime un ou plusieurs posts via query `post_ids` (répété). SYNCHRONE → { deleted_ids:[…] }. Prouvé live. ⚠️ Les posts 'queued' (auto) NE sont PAS supprimables ; les 'scheduled' (heure explicite) OUI.",
+      "params": { "post_ids": "query répété : DELETE /posts?post_ids=ID1&post_ids=ID2" },
+      "example": { "_query": "/posts?post_ids=<id1>&post_ids=<id2>" }
     }
   ],
   "media": [
