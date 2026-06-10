@@ -33,7 +33,10 @@ if (HOST === "0.0.0.0" && process.env.PUBLER_MCP_CONTAINER !== "1") {
 }
 
 const app = express();
-app.use(express.json());
+// ⚠️ limit 25mb (PAS le défaut express 100KB) : un appel `publer_call` avec `file` porte l'image en base64
+//    (une photo 2k ≈ 5-6 Mo → ~8 Mo base64). 100KB → HTTP 413 sur tout upload média. 25mb couvre les images
+//    avec marge (sans ouvrir un vecteur DoS démesuré). Le leg publer-mcp→Publer (FormData) n'a pas cette limite.
+app.use(express.json({ limit: "25mb" }));
 
 // Auth Bearer — AVANT tout traitement MCP.
 app.use((req, res, next) => {
