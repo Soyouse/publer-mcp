@@ -41,6 +41,7 @@
         "bulk.posts[].networks": "objet par réseau : { facebook|instagram|twitter|linkedin|mastodon|... : { type, text, ... } }",
         "networks.<provider>.type": "'status' | 'photo' | 'video' | 'link' | 'carousel' | 'pdf'",
         "networks.<provider>.text": "string — contenu du post pour ce réseau",
+        "networks.<provider>.media[]": "POUR type=photo|video : [{ id (= media.id renvoyé par POST /media), type ('photo'|'video'), caption? }]. ⚠️ Uploader le binaire AVANT via POST /media, PUIS référencer l'id ici.",
         "bulk.posts[].accounts[]": "tableau cible : [{ id (requis, = accounts.id), scheduled_at (ISO opt, override) }]"
       },
       "example": {
@@ -77,8 +78,44 @@
       "returns": "{ status, payload }"
     }
   ],
+  "media": [
+    {
+      "method": "POST",
+      "path": "/media",
+      "desc": "Upload binaire d'un média (image/vidéo) → renvoie { id } à référencer dans networks.<provider>.media[]. ⚠️ MULTIPART/form-data (champ `file`) : via publer_call, passer `file:{name,data(base64),type}` (PAS `payload`). Max 200MB. Photo = JPEG/PNG/WEBP. SYNCHRONE (id direct, pas de job).",
+      "params": {
+        "file": "(multipart, via publer_call.file) { name, data (base64), type (MIME) } — le binaire encodé",
+        "returns": "{ id } — l'id du média uploadé, à mettre dans networks.<provider>.media[].id"
+      },
+      "example": { "_via_publer_call": { "method": "POST", "endpoint": "/media", "file": { "name": "carte.png", "data": "<base64>", "type": "image/png" } } }
+    },
+    {
+      "method": "POST",
+      "path": "/media/from-url",
+      "desc": "Importe un média depuis une URL publique (alternative à l'upload binaire). ASYNC → renvoie { job_id } à poller via /job_status/{id}. Corps JSON classique.",
+      "params": {
+        "media[]": "[{ url (requis), name, caption (opt), source (opt) }]",
+        "type": "'single' | 'bulk'",
+        "direct_upload": "bool (opt)",
+        "in_library": "bool (opt)"
+      },
+      "example": { "media": [{ "url": "https://exemple.fr/img.png", "name": "img.png" }], "type": "single" }
+    },
+    {
+      "method": "GET",
+      "path": "/media",
+      "desc": "Liste la médiathèque du workspace (filtrable).",
+      "query": {
+        "types[]": "'photo' | 'video' | 'gif'",
+        "used[]": "bool — filtre par usage",
+        "ids[]": "array (opt) — bypass pagination/filtres",
+        "page": "int (0-based, défaut 0)",
+        "search": "string (opt) — recherche nom/caption"
+      },
+      "returns": "{ media: [{ id, type, name, caption, path, thumbnails:[{id,small,real}], created_at, favorite, in_library }], total }"
+    }
+  ],
   "_todo": {
-    "media": "POST /media (upload image/vidéo) — compléter depuis publer.com/docs/posting/create-posts/media-handling avant 1er post média.",
     "analytics": "GET analytics (charts/insights/hashtag/competitor, plan Business) — chemins exacts à confirmer depuis la doc analytics avant usage."
   }
 }

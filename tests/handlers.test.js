@@ -140,6 +140,19 @@ describe("publer_call", () => {
     expect(fetchMock.mock.calls[0][1].headers["Publer-Workspace-Id"]).toBe("WID2");
   });
 
+  it("file fourni : passé jusqu'à fetch en MULTIPART (FormData), sans Content-Type", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ id: "m1" }) }));
+    vi.stubGlobal("fetch", fetchMock);
+    const out = await call.handle(
+      { method: "POST", endpoint: "/media", file: { name: "c.png", data: Buffer.from("x").toString("base64"), type: "image/png" } },
+      ctx()
+    );
+    expect(JSON.parse(out)).toEqual({ id: "m1" });
+    const [, options] = fetchMock.mock.calls[0];
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(options.headers["Content-Type"]).toBeUndefined();
+  });
+
   it("erreur réseau : ajoute un incident détaillé (method+endpoint) puis rethrow", async () => {
     vi.stubGlobal(
       "fetch",

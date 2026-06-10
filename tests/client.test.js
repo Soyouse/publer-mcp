@@ -114,6 +114,48 @@ describe("client / buildRequest (pur)", () => {
   });
 });
 
+describe("client / buildRequest MULTIPART (upload binaire, ex: POST /media)", () => {
+  const b64 = Buffer.from("hello").toString("base64"); // 5 octets
+
+  it("file fourni (POST) : body = FormData, AUCUN Content-Type (boundary auto), auth conservée", () => {
+    const { options } = buildRequest("POST", "/media", null, "KEY1", "WID1", { name: "carte.png", data: b64, type: "image/png" });
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(options.headers["Content-Type"]).toBeUndefined(); // ⚠️ fetch pose la boundary, jamais à la main
+    expect(options.headers.Authorization).toBe("Bearer-API KEY1");
+    expect(options.headers["Publer-Workspace-Id"]).toBe("WID1");
+  });
+
+  it("file : champ `file` = Blob avec nom, type MIME et octets décodés du base64", () => {
+    const { options } = buildRequest("POST", "/media", null, "K", "W", { name: "carte.png", data: b64, type: "image/png" });
+    const f = options.body.get("file");
+    expect(f.name).toBe("carte.png");
+    expect(f.type).toBe("image/png");
+    expect(f.size).toBe(5); // "hello" décodé
+  });
+
+  it("file sans name : nom par défaut 'upload'", () => {
+    const { options } = buildRequest("POST", "/media", null, "K", "W", { data: b64 });
+    expect(options.body.get("file").name).toBe("upload");
+  });
+
+  it("file sans type : Blob sans type MIME imposé", () => {
+    const { options } = buildRequest("POST", "/media", null, "K", "W", { data: b64, name: "x" });
+    expect(options.body.get("file").type).toBe(""); // pas de type → Blob type vide
+  });
+
+  it("payload + file : les champs du payload deviennent des champs de formulaire (string brute, objet JSON)", () => {
+    const { options } = buildRequest("POST", "/media", { caption: "bonjour", meta: { a: 1 } }, "K", "W", { data: b64 });
+    expect(options.body.get("caption")).toBe("bonjour");
+    expect(options.body.get("meta")).toBe(JSON.stringify({ a: 1 }));
+  });
+
+  it("file + GET : ignoré (GET n'a jamais de body) → branche JSON, Content-Type rétabli", () => {
+    const { options } = buildRequest("GET", "/media", null, "K", "W", { data: b64 });
+    expect(options.body).toBeUndefined();
+    expect(options.headers["Content-Type"]).toBe("application/json");
+  });
+});
+
 describe("client / publerCall", () => {
   beforeEach(() => {
     _resetClient();
@@ -173,5 +215,18 @@ describe("client / publerCall", () => {
     vi.stubGlobal("fetch", fetchMock);
     await publerCall("GET", "/users/me");
     expect(fetchMock.mock.calls[0][0].endsWith("/api/v1/users/me")).toBe(true);
+  });
+
+  it("opts.file → requête MULTIPART (FormData) jusqu'à fetch, sans Content-Type (le fil bout-en-bout)", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, text: async () => JSON.stringify({ id: "m1" }) }));
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await publerCall("POST", "/media", null, {
+      file: { name: "x.png", data: Buffer.from("ab").toString("base64"), type: "image/png" },
+    });
+    expect(res).toEqual({ id: "m1" });
+    const [, options] = fetchMock.mock.calls[0];
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(options.headers["Content-Type"]).toBeUndefined();
+    expect(options.body.get("file").name).toBe("x.png");
   });
 });
