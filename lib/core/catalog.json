@@ -122,7 +122,24 @@
       "returns": "{ media: [{ id, type, name, caption, path, thumbnails:[{id,small,real}], created_at, favorite, in_library }], total }"
     }
   ],
+  "analytics": [
+    {
+      "method": "GET",
+      "path": "/analytics/{account_id}/post_insights",
+      "desc": "Insights par post publié (plan Business). VÉRIFIÉ LIVE 2026-06-11 (page FB WebZenon). ⚠️ {account_id} = l'`id` Publer du compte (= accounts[].id), PAS le social_id (sinon 'Resource does not exist'). ⚠️ `from` ET `to` OBLIGATOIRES (sans → HTTP 500 ; la doc ne le dit pas). 10 posts/page, `total` pour paginer.",
+      "query": {
+        "from": "YYYY-MM-DD — OBLIGATOIRE (borne basse, scheduled_at >=)",
+        "to": "YYYY-MM-DD — OBLIGATOIRE (borne haute, scheduled_at <=)",
+        "page": "int 0-based",
+        "competitors": "bool opt (=true inclut concurrents)",
+        "competitor_id": "string opt (1 concurrent)"
+      },
+      "returns": "{ posts: [{ id, text, title, type ('photo'|'status'|...), state, account_id, scheduled_at, post_link, post_id, labels[], media[], analytics{ METRIQUE: {name, value, tooltip} } }], total }",
+      "_shape_reelle": "⚠️ CHAQUE métrique = OBJET {name, value, tooltip}, PAS un nombre plat (la doc ment). value peut être null. Métriques FB page LIVE : reach, reach_rate, video_views, likes, comments, shares, post_clicks, engagement_rate, link_clicks, click_through_rate. ⚠️ PAS de champ `engagement` (le CALCULER = likes+comments+shares+post_clicks, cf tooltip engagement_rate) ; PAS de `saves` sur FB page. `analytics.engagement` n'existe PAS.",
+      "_join": "Publer NE connaît PAS notre angle/type interne (#1/#2/#4) — il n'a que le `type` réseau ('photo'/'status'). Ranker par angle/type ⇒ JOINDRE avec notre propre ledger {post_id → angle, type} posé à la publication. Ranker par créneau (best_window) ⇒ scheduled_at + engagement calculé suffisent (Publer seul)."
+    }
+  ],
   "_todo": {
-    "analytics": "GET analytics (charts/insights/hashtag/competitor, plan Business) — chemins exacts à confirmer depuis la doc analytics avant usage."
+    "analytics_autres": "Pas encore vérifiés live : /analytics/{account_id}/best_times_to_post, /members, competitor_analysis. Confirmer forme réelle AVANT usage (la doc idéalise — post_insights l'a prouvé)."
   }
 }
