@@ -137,9 +137,22 @@
       "returns": "{ posts: [{ id, text, title, type ('photo'|'status'|...), state, account_id, scheduled_at, post_link, post_id, labels[], media[], analytics{ METRIQUE: {name, value, tooltip} } }], total }",
       "_shape_reelle": "⚠️ CHAQUE métrique = OBJET {name, value, tooltip}, PAS un nombre plat (la doc ment). value peut être null. Métriques FB page LIVE : reach, reach_rate, video_views, likes, comments, shares, post_clicks, engagement_rate, link_clicks, click_through_rate. ⚠️ PAS de champ `engagement` (le CALCULER = likes+comments+shares+post_clicks, cf tooltip engagement_rate) ; PAS de `saves` sur FB page. `analytics.engagement` n'existe PAS.",
       "_join": "Publer NE connaît PAS notre angle/type interne (#1/#2/#4) — il n'a que le `type` réseau ('photo'/'status'). Ranker par angle/type ⇒ JOINDRE avec notre propre ledger {post_id → angle, type} posé à la publication. Ranker par créneau (best_window) ⇒ scheduled_at + engagement calculé suffisent (Publer seul)."
+    },
+    {
+      "method": "GET",
+      "path": "/analytics/{account_id}/best_times",
+      "desc": "Scores d'engagement relatifs par créneau horaire (jour × heure). VÉRIFIÉ LIVE 2026-06-12 (page FB WebZenon). {account_id} = accounts[].id (omis = tous les comptes). `from`/`to` OBLIGATOIRES.",
+      "query": {
+        "from": "YYYY-MM-DD — OBLIGATOIRE",
+        "to": "YYYY-MM-DD — OBLIGATOIRE",
+        "competitors": "bool opt",
+        "competitor_id": "string opt"
+      },
+      "returns": "{ Monday..Sunday: [24 nombres] } — index 0-23 = heure, valeur = score d'engagement relatif (plus haut = meilleur créneau).",
+      "_piege": "⚠️ TIMEZONE de l'index horaire NON confirmée (le pic live ne matche ni Paris ni UTC du post source) — vérifier l'alignement avant d'en dériver un calendrier. Notre ④ calcule best_window depuis post_insights.scheduled_at (TZ maîtrisée), PAS depuis cet endpoint."
     }
   ],
   "_todo": {
-    "analytics_autres": "Pas encore vérifiés live : /analytics/{account_id}/best_times_to_post, /members, competitor_analysis. Confirmer forme réelle AVANT usage (la doc idéalise — post_insights l'a prouvé)."
+    "analytics_autres": "Pas encore vérifiés live : /members, competitor_analysis. Confirmer forme réelle AVANT usage (la doc idéalise — post_insights l'a prouvé)."
   }
 }
