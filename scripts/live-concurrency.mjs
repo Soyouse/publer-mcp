@@ -44,7 +44,7 @@ async function run() {
     A.client.callTool({ name: "publer_call", arguments: { method: "GET", endpoint: "/users/me" } }),
     B.client.callTool({ name: "publer_call", arguments: { method: "GET", endpoint: "/accounts" } }),
   ]);
-  console.log("A /users/me:", meA.content[0].text.includes("titanicvegeta") ? "LIVE OK" : meA.content[0].text.slice(0, 120));
+  console.log("A /users/me:", /"email"\s*:\s*"[^"]+"/.test(meA.content[0].text) ? "LIVE OK" : meA.content[0].text.slice(0, 120));
   console.log("B /accounts:", meB.content[0].text.slice(0, 80).replace(/\n/g, " "));
 
   await Promise.all([A.transport.close(), B.transport.close()]);
