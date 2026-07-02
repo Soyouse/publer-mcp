@@ -3,7 +3,7 @@
 #    sur bridge, 200 en --network host). Le runtime DOIT joindre app.publer.com → réseau hôte.
 #    Isolation FS/deps/process PRÉSERVÉE (une dép compromise reste dans le conteneur) ; seul le net est partagé.
 # ⚠️ Avec network_mode host : pas de mapping `ports`, l'app bind directement PUBLER_MCP_HTTP_HOST:PORT
-#    sur l'hôte = 100.64.0.1:8789 (IP Tailscale, tailnet only — JAMAIS 0.0.0.0). serve :8450 pointe dessus.
+#    sur l'hôte (IP Tailscale du tailnet, tailnet only — JAMAIS 0.0.0.0), défini dans service.env.
 # ⚠️ build.network host : npm ci a besoin du réseau (même raison que le runtime).
 # ⚠️ Secrets montés read-only, JAMAIS dans l'image. service.env (chmod 600) = token/port/allowed-hosts.
 services:
@@ -17,7 +17,5 @@ services:
     network_mode: host
     env_file:
       - ./service.env
-    environment:
-      PUBLER_MCP_HTTP_HOST: "100.64.0.1"
     volumes:
       - ./.secrets.json:/app/.secrets.json:ro
