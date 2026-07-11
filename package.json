@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "mutation": "stryker run",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dup": "jscpd .",
+    "arch": "depcruise --config .dependency-cruiser.cjs .",
+    "coupling": "npm run dup && npm run arch"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -24,7 +27,9 @@
   "devDependencies": {
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
+    "dependency-cruiser": "^18.0.0",
     "husky": "^9.1.7",
+    "jscpd": "^5.0.12",
     "vitest": "^4.1.7"
   }
 }
