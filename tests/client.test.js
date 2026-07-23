@@ -9,6 +9,7 @@ process.env.PUBLER_SECRETS_PATH = join(here, "fixtures", "secrets.test.json");
 const {
   normalizeSecrets,
   resolveWorkspaceId,
+  resolveWorkspaceCreds,
   buildRequest,
   publerCall,
   listWorkspaces,
@@ -75,9 +76,45 @@ describe("client / resolveWorkspaceId", () => {
     expect(resolveWorkspaceId("ws2")).toBe("ws2");
   });
 
+
+  it("workspace_id BRUT Publer → mappé vers son alias (source unique côté appelant : l'ID)", async () => {
+    // ⚠️ Cas réel 23/07/2026 (agent-social multi-tenant) : la glue stocke l'ID Publer 24-hex du
+    // workspace CLIENT (jamais un slug) et le passe tel quel. Refuser l'ID brut = forcer un double
+    // mapping alias↔id chez chaque appelant = divergence garantie.
+    await listWorkspaces();
+    expect(resolveWorkspaceId("WID2")).toBe("ws2");
+  });
+
   it("inconnu → throw", async () => {
     await listWorkspaces();
     expect(() => resolveWorkspaceId("nope")).toThrow(/inconnu/);
+  });
+});
+
+
+describe("client / resolveWorkspaceCreds (passthrough ID compte)", () => {
+  beforeEach(() => _resetClient());
+
+  it("alias configuré → ses creds", async () => {
+    await listWorkspaces();
+    expect(resolveWorkspaceCreds("ws2")).toEqual({ alias: "ws2", api_key: "KEY2", workspace_id: "WID2" });
+  });
+
+  it("workspace_id configuré → les creds de son alias", async () => {
+    await listWorkspaces();
+    expect(resolveWorkspaceCreds("WID2")).toEqual({ alias: "ws2", api_key: "KEY2", workspace_id: "WID2" });
+  });
+
+  it("ID Publer 24-hex INCONNU → PASSTHROUGH avec la clé du compte par défaut (anti-O(N) : 1 workspace/client, jamais une édition de secrets par client)", async () => {
+    // ⚠️ La clé API Publer est au niveau du COMPTE ; le workspace n'est qu'un header. Un nouveau
+    // workspace du même compte doit marcher SANS toucher .secrets.json. Mauvais compte => Publer 403 (bruyant).
+    await listWorkspaces();
+    expect(resolveWorkspaceCreds("6a6204ee1d1ab0ecc5b30fea")).toEqual({ alias: null, api_key: "KEY1", workspace_id: "6a6204ee1d1ab0ecc5b30fea" });
+  });
+
+  it("valeur ni alias ni forme d'ID → throw (typo bruyante, jamais un défaut silencieux)", async () => {
+    await listWorkspaces();
+    expect(() => resolveWorkspaceCreds("netium")).toThrow(/inconnu/);
   });
 });
 
