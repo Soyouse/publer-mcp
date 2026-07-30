@@ -5,7 +5,11 @@
   "_comment_incremental": "Mode incrémental (diff-based) : ne re-mute QUE le code changé via reports/stryker-incremental.json, rapport COMPLET conservé. Fichier absent/corrompu → fallback run complet (sûr).",
   "incremental": true,
   "testRunner": "vitest",
-  "reporters": ["html", "clear-text", "progress"],
+  "reporters": [
+    "html",
+    "clear-text",
+    "progress"
+  ],
   "coverageAnalysis": "perTest",
   "_comment_io": "Le fetch réseau de client.js (doFetch) est I/O — prouvé live, pas par mutation. La logique PURE (normalizeSecrets, resolveWorkspaceId, buildRequest, méthode) est mutée. server.js/http.js = transports I/O, exclus.",
   "mutate": [
@@ -15,7 +19,8 @@
     "lib/registry.js",
     "handlers/*.js",
     "dispatch.js",
-    "incidents.js"
+    "incidents.js",
+    "lib/deps-criticite-pure.js"
   ],
   "thresholds": {
     "high": 85,
