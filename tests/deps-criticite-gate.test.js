@@ -18,7 +18,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const MANIFESTE = JSON.parse(readFileSync(path.join(ROOT, "deps-criticite.json"), "utf8"));
+// ⚠️ BOM TOLÉRÉ À LA LECTURE : npm accepte un package.json avec BOM UTF-8, `JSON.parse` LÈVE dessus
+//    (cas réel trouvé ailleurs dans le parc). Un gate ne doit pas MOURIR sur le défaut qu'il rapporte.
+const lireJson = (f) => JSON.parse(readFileSync(f, "utf8").replace(/^﻿/, ""));
+const MANIFESTE = lireJson(path.join(ROOT, "deps-criticite.json"));
 
 // ⚠️ Dossiers portant des package.json qui ne sont PAS les nôtres (dépendances, bacs à sable d'outils).
 const IGNORE = new Set(["node_modules", ".git", ".stryker-tmp", "coverage", "reports", "dist"]);
@@ -44,7 +47,7 @@ function toutesDeps() {
   const out = [];
   for (const file of packageJsons()) {
     const ou = path.relative(ROOT, path.dirname(file)).replace(/\\/g, "/") || ".";
-    const pkg = JSON.parse(readFileSync(file, "utf8"));
+    const pkg = lireJson(file);
     for (const bloc of ["dependencies", "devDependencies"]) {
       for (const [nom, plage] of Object.entries(pkg[bloc] || {})) out.push({ nom, plage, ou });
     }
@@ -92,7 +95,12 @@ describe("criticité des dépendances", () => {
     expect(surPlage, "aucune dépendance sur une plage : impossible de prouver que le gate mord").toBeTruthy();
 
     const factice = { [surPlage.nom]: "MOTEUR FACTICE — présent UNIQUEMENT pour prouver que le gate mord." };
-    expect(fautesEpinglage(deps, factice)).toHaveLength(1);
+    // ⚠️ Nombre attendu DÉRIVÉ du réel, jamais écrit « 1 » : la même dépendance peut être déclarée dans
+    //    PLUSIEURS package.json — chaque déclaration doit produire sa faute. Écrire 1 en dur fait rougir
+    //    le test pour une mauvaise raison (vécu à la pose, sur un repo multi-paquets).
+    const attendu = deps.filter((d) => d.nom === surPlage.nom && !EXACT.test(d.plage)).length;
+    expect(attendu).toBeGreaterThanOrEqual(1);
+    expect(fautesEpinglage(deps, factice)).toHaveLength(attendu);
     // Et l'inverse : correctement épinglée, elle ne doit PAS être signalée (pas de gate qui crie à tort).
     expect(fautesEpinglage([{ ...surPlage, plage: "1.2.3" }], factice)).toEqual([]);
   });
