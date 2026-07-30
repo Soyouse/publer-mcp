@@ -1,0 +1,17 @@
+{
+  "_doc": "CLASSIFICATION DE CRITICITÉ des dépendances du repo (30/07/2026, propagation parc §42.3 depuis agent-social). SOURCE UNIQUE, consommée par `tests/deps-criticite-gate.test.js`. Toute dépendance de TOUT package.json du repo DOIT figurer ici — non classée = ROUGE.",
+  "_doc_classes": "`moteur` = la dépendance DÉTERMINE LA SORTIE livrée (pixels, mesures, encodage) ⇒ épinglage EXACT OBLIGATOIRE (ni ^, ni ~, ni plage). `ordinaire` = elle ne change pas la sortie (serveur, transport, cadence, outillage de test) ⇒ caret SOUHAITABLE (correctifs de sécurité).",
+  "_doc_zero_moteur": "⚠️ CE REPO N'A AUCUN MOTEUR AUJOURD'HUI, et c'est normal : publer-mcp est un PASSE-PLAT vers l'API Publer — il achemine du texte et des médias déjà produits ailleurs, il n'en fabrique aucun. Le gate n'est donc pas là pour corriger un défaut existant mais pour rendre IMPOSSIBLE l'entrée future d'un moteur sur un caret. Sa mécanique est prouvée vivante par un test d'ANTI-DORMANCE (moteur factice), sans quoi un périmètre vide = un gate qui dort.",
+  "moteur": {},
+  "ordinaire": {
+    "@modelcontextprotocol/sdk": "transport MCP : une dérive casse le protocole (BRUYANT, immédiat), elle n'altère pas silencieusement un livrable.",
+    "express": "serveur HTTP : achemine des requêtes, ne fabrique aucun contenu.",
+    "p-throttle": "cadence des appels vers l'API Publer : influence le débit et le respect des quotas, jamais le contenu publié.",
+    "vitest": "harnais de test. Une dérive change le comportement des GATES, pas la sortie du produit — et un gate qui casse est BRUYANT (rouge).",
+    "@stryker-mutator/core": "mutation testing (outillage de gate).",
+    "@stryker-mutator/vitest-runner": "runner Stryker (outillage de gate).",
+    "dependency-cruiser": "détection de couplage (outillage de gate).",
+    "jscpd": "détection de duplication. Sa dérive peut bouger le POURCENTAGE donc le cliquet — mais un cliquet franchi est ROUGE, donc visible.",
+    "husky": "hooks git (outillage local)."
+  }
+}
