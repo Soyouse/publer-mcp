@@ -26,5 +26,8 @@
     "high": 85,
     "low": 80,
     "break": 80
-  }
+  },
+  "concurrency": 3,
+  "timeoutMS": 60000,
+  "_config_minimale": "OBLIGATOIRE (CLAUDE.md, local ET CI) : incremental:true + coverageAnalysis:perTest + timeoutMS explicite + concurrency bornee 2-3. Propage depuis pw-mcp-proxy le 03/08/2026. ⚠️ concurrency NON BORNEE sature la machine (Stryker prend tous les coeurs) — les garde-fous sautent a 100% CPU. ⚠️ timeoutMS absent = un mutant qui EXPIRE est compte comme TUE => score GONFLE et FAUX."
 }
