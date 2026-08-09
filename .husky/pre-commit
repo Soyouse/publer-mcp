@@ -1,1 +1,12 @@
-npm test
+# ⚠️⚠️ CE HOOK NE LANCE PLUS LA SUITE — PROPAGATION DEPUIS infra-mcp (09/08/2026).
+#
+# Il contenait `npm test`. CLAUDE.md l'interdit nommément : « Gate JAMAIS bloquant
+# (husky full-suite = BANNI, le "40 ans"). Dev = watch ; push = CI async ». Une suite
+# lente sur le chemin du COMMIT finit contournée au `--no-verify` — et le jour où elle
+# a raison, personne ne la croit. Un filet qu'on désactive vaut zéro.
+#
+# ⚠️ RIEN N'EST PERDU : `.husky/pre-push` relance `npm test` avant tout push. Un rouge ne
+#    peut pas atteindre le dépôt partagé. On a retiré un DOUBLON bloquant, pas un filet.
+#
+# ⚠️ NE JAMAIS y remettre `npm test`. Pendant le dev : `npm run test:watch` (gratuit, ciblé).
+exit 0
