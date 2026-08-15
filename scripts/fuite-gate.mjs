@@ -27,24 +27,10 @@ if (!fs.existsSync(MOTEUR)) {
   process.exit(0);
 }
 const { motifsInterdits, scanner } = createRequire(import.meta.url)(MOTEUR);
-
-function termesPrives() {
-  let decl;
-  try {
-    decl = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', 'secrets', 'ctxroute-fuite.json'), 'utf8'));
-  } catch {
-    return []; // pas de liste : mode générique, jamais une panne
-  }
-  const termes = Array.isArray(decl.termes) ? [...decl.termes] : [];
-  for (const src of Array.isArray(decl.dossiersDerives) ? decl.dossiersDerives : []) {
-    try {
-      for (const e of fs.readdirSync(src.racine, { withFileTypes: true })) {
-        if (e.isDirectory() && fs.existsSync(path.join(src.racine, e.name, src.marqueur))) termes.push(e.name);
-      }
-    } catch { /* source absente ici : on n'invente rien */ }
-  }
-  return termes;
-}
+// ⚠️ SOURCE UNIQUE de la liste (termes + dérivation + exceptions) : fuite-liste.js
+//    de ctxroute — la recopier ici serait un jumeau, et il a divergé le jour même
+//    (l'exception « marque » n'existait pas dans la copie).
+const { termesPrives } = createRequire(import.meta.url)(path.join(CTXROUTE, 'fuite-liste.js'));
 
 const m = motifsInterdits(os.userInfo().username, os.homedir(), termesPrives());
 // Périmètre = ce qui va ENTRER dans l'historique : les fichiers de l'index.
