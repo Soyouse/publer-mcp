@@ -9,4 +9,8 @@
 #    peut pas atteindre le dépôt partagé. On a retiré un DOUBLON bloquant, pas un filet.
 #
 # ⚠️ NE JAMAIS y remettre `npm test`. Pendant le dev : `npm run test:watch` (gratuit, ciblé).
+
+# ⚠️ GATE ANTI-FUITE (16/08/2026) — le SEUL contrôle bloquant admis ici : ~1 s,
+#    et le dommage évité est IRRÉVERSIBLE (dépôt public). Détail : scripts/fuite-gate.mjs.
+node scripts/fuite-gate.mjs
 exit 0
