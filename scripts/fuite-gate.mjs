@@ -44,7 +44,12 @@ for (const rel of fichiers) {
   } catch {
     continue; // binaire/illisible : hors périmètre texte
   }
-  for (const v of scan(texte, m)) violations.push(`${rel} → ${v.name} (${v.excerpt})`);
+  for (const v of scan(texte, m)) {
+    // ⚠️ shape drift = LOUD (16/08/2026: ctxroute renamed nom/extrait -> name/excerpt;
+    //    an undefined field here would have reported `undefined (undefined)` silently).
+    if (typeof v.name !== 'string' || typeof v.excerpt !== 'string') throw new Error('fuite-gate: leak-pure scan() shape drifted — update this launcher');
+    violations.push(`${rel} → ${v.name} (${v.excerpt})`);
+  }
 }
 if (violations.length > 0) {
   console.error('COMMIT REFUSÉ — une donnée personnelle atteindrait un dépôt PUBLIC :');
