@@ -44,7 +44,7 @@ for (const rel of fichiers) {
   } catch {
     continue; // binaire/illisible : hors périmètre texte
   }
-  for (const v of scan(texte, m)) violations.push(`${rel} → ${v.nom} (${v.extrait})`);
+  for (const v of scan(texte, m)) violations.push(`${rel} → ${v.name} (${v.excerpt})`);
 }
 if (violations.length > 0) {
   console.error('COMMIT REFUSÉ — une donnée personnelle atteindrait un dépôt PUBLIC :');
