@@ -21,18 +21,18 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 
 const CTXROUTE = process.env.CTXROUTE_DIR || path.join(os.homedir(), 'Desktop', 'ctxroute');
-const MOTEUR = path.join(CTXROUTE, 'fuite-pure.js');
+const MOTEUR = path.join(CTXROUTE, 'src', 'leak-pure.js');
 if (!fs.existsSync(MOTEUR)) {
   console.log('fuite-gate : moteur ctxroute introuvable — gate NON joué (machine sans liste privée).');
   process.exit(0);
 }
-const { motifsInterdits, scanner } = createRequire(import.meta.url)(MOTEUR);
+const { forbiddenPatterns, scan } = createRequire(import.meta.url)(MOTEUR);
 // ⚠️ SOURCE UNIQUE de la liste (termes + dérivation + exceptions) : fuite-liste.js
 //    de ctxroute — la recopier ici serait un jumeau, et il a divergé le jour même
 //    (l'exception « marque » n'existait pas dans la copie).
-const { termesPrives } = createRequire(import.meta.url)(path.join(CTXROUTE, 'fuite-liste.js'));
+const { privateTerms } = createRequire(import.meta.url)(path.join(CTXROUTE, 'src', 'leak-list.js'));
 
-const m = motifsInterdits(os.userInfo().username, os.homedir(), termesPrives());
+const m = forbiddenPatterns(os.userInfo().username, os.homedir(), privateTerms());
 // Périmètre = ce qui va ENTRER dans l'historique : les fichiers de l'index.
 const fichiers = execFileSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACM'], { encoding: 'utf8' })
   .split('\n').map((s) => s.trim()).filter(Boolean);
@@ -44,7 +44,7 @@ for (const rel of fichiers) {
   } catch {
     continue; // binaire/illisible : hors périmètre texte
   }
-  for (const v of scanner(texte, m)) violations.push(`${rel} → ${v.nom} (${v.extrait})`);
+  for (const v of scan(texte, m)) violations.push(`${rel} → ${v.nom} (${v.extrait})`);
 }
 if (violations.length > 0) {
   console.error('COMMIT REFUSÉ — une donnée personnelle atteindrait un dépôt PUBLIC :');
