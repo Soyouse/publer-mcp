@@ -10,6 +10,7 @@
     "vitest": "harnais de test. Une dérive change le comportement des GATES, pas la sortie du produit — et un gate qui casse est BRUYANT (rouge).",
     "@stryker-mutator/core": "mutation testing (outillage de gate).",
     "@stryker-mutator/vitest-runner": "runner Stryker (outillage de gate).",
+    "@ast-grep/cli": "analyse AST des gates statiques (rules/*.yml, consommé par tests/quadratique-gate.test.js). Outillage de gate : une dérive change ce que le gate VOIT, jamais un octet livré — et un gate qui bouge est ROUGE, donc bruyant. ⚠️ Sa version compte tout de même : les motifs dépendent de la grammaire tree-sitter embarquée.",
     "dependency-cruiser": "détection de couplage (outillage de gate).",
     "jscpd": "détection de duplication. Sa dérive peut bouger le POURCENTAGE donc le cliquet — mais un cliquet franchi est ROUGE, donc visible.",
     "husky": "hooks git (outillage local)."
